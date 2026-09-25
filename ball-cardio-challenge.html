@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>10-Day Ball Cardio Challenge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#12181A; --bg-soft:#1A2224; --card:#1E2A2D;
+    --coral:#FF6B4A; --lime:#C7FF4A; --text:#F2EFE9; --muted:#93A3A3;
+    --line:#2C3A3D;
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  *{box-sizing:inherit; margin:0; padding:0;}
+  html{scroll-padding-top:env(safe-area-inset-top,0px);}
+  html,body{height:100%;}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:'Inter',system-ui,sans-serif;
+    min-height:100%; padding:1.5rem 1rem 3rem;
+  }
+  h1,h2,.num{font-family:'Space Grotesk',system-ui,sans-serif;}
+  .wrap{max-width:640px; margin:0 auto;}
+  header{margin-bottom:1.75rem;}
+  .kicker{color:var(--coral); font-weight:600; font-size:.85rem; letter-spacing:.02em;}
+  h1{font-size:1.9rem; font-weight:700; line-height:1.15; margin:.35rem 0 .6rem;}
+  header p{color:var(--muted); font-size:.95rem; line-height:1.5; max-width:52ch;}
+
+  .progress-row{display:flex; align-items:center; gap:.75rem; margin:1.4rem 0 1.8rem;}
+  .bar{flex:1; height:10px; background:var(--bg-soft); border-radius:6px; overflow:hidden; border:1px solid var(--line);}
+  .bar-fill{height:100%; width:0%; background:linear-gradient(90deg,var(--coral),var(--lime)); transition:width .4s ease;}
+  .progress-row span{font-size:.85rem; color:var(--muted); white-space:nowrap;}
+
+  .day{
+    background:var(--card); border:1px solid var(--line); border-radius:14px;
+    margin-bottom:.85rem; overflow:hidden;
+  }
+  .day.done{border-color:var(--lime);}
+  .day-head{
+    display:flex; align-items:center; gap:.9rem; padding:1rem 1.1rem;
+    cursor:pointer; user-select:none;
+  }
+  .num{
+    width:2.4rem; height:2.4rem; border-radius:8px; background:var(--bg-soft);
+    display:flex; align-items:center; justify-content:center;
+    font-weight:700; font-size:1.05rem; color:var(--muted); flex-shrink:0;
+  }
+  .day.done .num{background:var(--lime); color:#0F1512;}
+  .day-title{flex:1; min-width:0;}
+  .day-title .name{font-weight:600; font-size:1rem;}
+  .check{
+    width:1.6rem; height:1.6rem; border-radius:50%; border:2px solid var(--line);
+    flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    transition:background .2s ease, border-color .2s ease;
+  }
+  .day.done .check{background:var(--lime); border-color:var(--lime); color:#0F1512;}
+
+  footer{margin-top:2rem; text-align:center; color:var(--muted); font-size:.8rem;}
+  footer button{
+    background:none; border:none; color:var(--coral); font:inherit; cursor:pointer;
+    text-decoration:underline; padding:0;
+  }
+  @media (prefers-reduced-motion:reduce){ *{transition:none !important;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="kicker">10-DAY CHALLENGE</div>
+    <h1>Ball Cardio, ten days straight.</h1>
+    <p>Grab a ball and do your cardio session each day. Tick off each day as you complete it.</p>
+  </header>
+
+  <div class="progress-row">
+    <div class="bar"><div class="bar-fill" id="barFill"></div></div>
+    <span id="progressLabel">0 / 10 days</span>
+  </div>
+
+  <div id="days"></div>
+
+  <footer>
+    <span id="finishMsg" style="display:none;">All 10 days done. Nice work. </span>
+    <button id="resetBtn" type="button">Reset progress</button>
+  </footer>
+</div>
+
+<script>
+const PLAN = Array.from({length: 10}, () => "Ball Exercise");
+
+const KEY = "ballCardio10dayProgress";
+let done = [];
+try {
+  const saved = localStorage.getItem(KEY);
+  if (saved) done = JSON.parse(saved);
+} catch(e) { done = []; }
+
+const daysEl = document.getElementById('days');
+
+function save(){
+  try { localStorage.setItem(KEY, JSON.stringify(done)); } catch(e) {}
+}
+
+function render(){
+  daysEl.innerHTML = '';
+  PLAN.forEach((label, i) => {
+    const isDone = done.includes(i);
+    const el = document.createElement('div');
+    el.className = 'day' + (isDone ? ' done' : '');
+    el.innerHTML = `
+      <div class="day-head" data-i="${i}">
+        <div class="num">${i+1}</div>
+        <div class="day-title">
+          <div class="name">Day ${i+1}: ${label}</div>
+        </div>
+        <div class="check">${isDone ? '✓' : ''}</div>
+      </div>`;
+    daysEl.appendChild(el);
+  });
+  updateProgress();
+}
+
+function updateProgress(){
+  const n = done.length;
+  document.getElementById('barFill').style.width = (n/10*100) + '%';
+  document.getElementById('progressLabel').textContent = n + ' / 10 days';
+  document.getElementById('finishMsg').style.display = n === 10 ? 'inline' : 'none';
+}
+
+daysEl.addEventListener('click', (ev) => {
+  const head = ev.target.closest('.day-head');
+  if (!head) return;
+  const i = +head.dataset.i;
+  const idx = done.indexOf(i);
+  if (idx === -1) done.push(i); else done.splice(idx,1);
+  save();
+  render();
+});
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  done = [];
+  save();
+  render();
+});
+
+render();
+</script>
+</body>
+</html>
